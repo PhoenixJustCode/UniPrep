@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тесты - UniPrep</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Тесты</h1>
+            <nav>
+                <button onclick="location.href='/'" class="btn btn-outline">Главная</button>
+                <button onclick="location.href='/profile'" class="btn btn-outline">Профиль</button>
+                <button onclick="logout()" class="btn btn-outline">Выйти</button>
+            </nav>
+        </header>
+
+        <div class="test-selector">
+            <div class="step" id="step1">
+                <h2>Шаг 1: Выберите курс</h2>
+                <div class="courses-grid" id="coursesGrid"></div>
+            </div>
+
+            <div class="step" id="step2" style="display: none;">
+                <h2>Шаг 2: Выберите предмет</h2>
+                <button onclick="backToStep1()" class="btn btn-outline">← Назад</button>
+                <div class="subjects-grid" id="subjectsGrid"></div>
+            </div>
+
+            <div class="step" id="step3" style="display: none;">
+                <h2>Шаг 3: Выберите тип теста</h2>
+                <button onclick="backToStep2()" class="btn btn-outline">← Назад</button>
+                <div class="test-types-grid" id="testTypesGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/tests.js"></script>
+</body>
+</html>
