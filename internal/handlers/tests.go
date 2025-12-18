@@ -85,7 +85,7 @@ func GetTestTypes(w http.ResponseWriter, r *http.Request) {
 func GetTestQuestions(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("[DEBUG] GetTestQuestions called")
 
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		fmt.Println("[DEBUG] Unauthorized - no user_id in session")
@@ -197,7 +197,7 @@ func GetTestQuestions(w http.ResponseWriter, r *http.Request) {
 }
 
 func SubmitTest(w http.ResponseWriter, r *http.Request) {
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -246,7 +246,7 @@ func SubmitTest(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTestHistory(w http.ResponseWriter, r *http.Request) {
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -301,7 +301,7 @@ func GetTestHistory(w http.ResponseWriter, r *http.Request) {
 func DeleteTestHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		log.Printf("DELETE: User not authorized")

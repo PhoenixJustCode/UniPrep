@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"uniprep/internal/database"
 	"uniprep/internal/models"
@@ -10,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var sessionStore = sessions.NewCookieStore([]byte("super-secret-key-change-in-production"))
+var SessionStore = sessions.NewCookieStore([]byte("super-secret-key-change-in-production"))
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
@@ -40,7 +41,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Создаем сессию
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	session.Values["user_id"] = userID
 	session.Values["email"] = req.Email
 	session.Save(r, w)
@@ -66,6 +67,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Phone)
 
 	if err != nil {
+		log.Printf("DEBUG: Login failed: User not found for email %s: %v", req.Email, err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid credentials"})
@@ -75,14 +77,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// Проверяем пароль
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
+		log.Printf("DEBUG: Login failed: Password mismatch for user %s: %v", req.Email, err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid credentials"})
 		return
 	}
+	log.Printf("DEBUG: Login successful for user %s", req.Email)
 
 	// Создаем сессию
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	session.Values["user_id"] = user.ID
 	session.Values["email"] = user.Email
 	session.Save(r, w)
@@ -96,7 +100,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	session.Values = make(map[interface{}]interface{})
 	session.Save(r, w)
 
@@ -105,7 +109,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetProfile(w http.ResponseWriter, r *http.Request) {
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -128,7 +132,7 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	session, _ := sessionStore.Get(r, "session")
+	session, _ := SessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
