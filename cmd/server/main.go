@@ -13,8 +13,11 @@ import (
 )
 
 func main() {
-	port := flag.String("port", "8080", "Server port")
-	connStr := flag.String("db", "postgres://postgres:postgres@localhost/uniprep?sslmode=disable", "Database connection string")
+	port := flag.String("port", "8000", "Server port")
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		*port = envPort
+	}
+	connStr := flag.String("db", "postgres://postgres:123@localhost/uniprep?sslmode=disable", "Database connection string")
 	flag.Parse()
 
 	// Инициализация базы данных
