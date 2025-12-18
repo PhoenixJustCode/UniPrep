@@ -7,6 +7,7 @@ import (
 	"os"
 	"uniprep/internal/database"
 	"uniprep/internal/handlers"
+	"uniprep/internal/middleware"
 
 	"github.com/gorilla/mux"
 )
@@ -33,7 +34,7 @@ func main() {
 
 	// API маршруты
 	api := r.PathPrefix("/api").Subrouter()
-
+	middleware.Init()
 	// Аутентификация
 	api.HandleFunc("/register", handlers.Register).Methods("POST")
 	api.HandleFunc("/login", handlers.Login).Methods("POST")

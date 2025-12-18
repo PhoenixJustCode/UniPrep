@@ -1,58 +1,119 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Прохождение теста - UniPrep</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>📝 Тест</h1>
-            <nav>
-                <button onclick="location.href='/tests'" class="btn btn-outline">← Назад к тестам</button>
-            </nav>
-        </header>
+      <header>
+        <h1>📝 Тест</h1>
+        <nav>
+          <button onclick="location.href='/tests'" class="btn btn-outline">
+            ← Назад к тестам
+          </button>
+        </nav>
+      </header>
 
-        <div class="test-container">
-            <div class="progress-bar">
-                <div class="questions-indicator" id="questionsIndicator"></div>
-            </div>
-
-            <div class="question-container" id="questionContainer">
-                <h2 class="question-text" id="questionText"></h2>
-                <div class="answers-list" id="answersList"></div>
-                <div class="navigation-buttons">
-                    <button id="prevBtn" class="btn btn-outline" onclick="prevQuestion()" style="display: none;">← Предыдущий</button>
-                    <div class="nav-buttons-right">
-                        <button id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" style="display: none;">Следующий вопрос →</button>
-                        <button id="finishBtn" class="btn btn-success" onclick="finishTest()" style="display: none;">Завершить тест</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="result-container" id="resultContainer" style="display: none;">
-                <h2>Результат теста</h2>
-                <div class="result-score">
-                    <p>Правильных ответов: <span id="resultScore"></span> из <span id="resultTotal"></span></p>
-                </div>
-                <div class="circular-progress-container">
-                    <svg class="circular-progress" viewBox="0 0 200 200">
-                        <circle class="progress-background" cx="100" cy="100" r="90" stroke="#e0e0e0" stroke-width="10" fill="none"/>
-                        <circle class="progress-circle" cx="100" cy="100" r="90" stroke="#667eea" stroke-width="10" fill="none" 
-                                stroke-dasharray="565.48" stroke-dashoffset="565.48" transform="rotate(-90 100 100)"/>
-                    </svg>
-                    <div class="circular-progress-text">
-                        <span id="circularPercentage" class="percentage-value">0</span>
-                        <span class="percentage-sign">%</span>
-                    </div>
-                </div>
-                <button onclick="location.href='/tests'" class="btn btn-primary">Вернуться к тестам</button>
-            </div>
+      <div class="test-container">
+        <div class="progress-bar">
+          <div class="questions-indicator" id="questionsIndicator"></div>
         </div>
+
+        <div class="question-container" id="questionContainer">
+          <h2 class="question-text" id="questionText"></h2>
+          <div class="answers-list" id="answersList"></div>
+          <div class="navigation-buttons">
+            <button
+              id="prevBtn"
+              class="btn btn-outline"
+              onclick="prevQuestion()"
+              style="display: none"
+            >
+              ← Предыдущий
+            </button>
+            <div class="nav-buttons-right">
+              <button
+                id="nextBtn"
+                class="btn btn-primary"
+                onclick="nextQuestion()"
+                style="display: none"
+              >
+                Следующий вопрос →
+              </button>
+              <button
+                id="finishBtn"
+                class="btn btn-success"
+                onclick="finishTest()"
+                style="display: none"
+              >
+                Завершить тест
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="result-container"
+          id="resultContainer"
+          style="display: none"
+        >
+          <h2>Результат теста</h2>
+          <div class="result-score">
+            <p>
+              Правильных ответов: <span id="resultScore"></span> из
+              <span id="resultTotal"></span>
+            </p>
+          </div>
+          <div class="circular-progress-container">
+            <svg class="circular-progress" viewBox="0 0 200 200">
+              <circle
+                class="progress-background"
+                cx="100"
+                cy="100"
+                r="90"
+                stroke="#e0e0e0"
+                stroke-width="10"
+                fill="none"
+              />
+              <circle
+                class="progress-circle"
+                cx="100"
+                cy="100"
+                r="90"
+                stroke="#667eea"
+                stroke-width="10"
+                fill="none"
+                stroke-dasharray="565.48"
+                stroke-dashoffset="565.48"
+                transform="rotate(-90 100 100)"
+              />
+            </svg>
+            <div class="circular-progress-text">
+              <span id="circularPercentage" class="percentage-value">0</span>
+              <span class="percentage-sign">%</span>
+            </div>
+          </div>
+          <button onclick="location.href='/profile'" class="btn btn-primary">
+            Перейти в профиль
+          </button>
+        </div>
+      </div>
     </div>
 
-    <script src="/static/js/test.js"></script>
-</body>
+      <div id="customModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <p id="modalMessage"></p>
+          <div class="modal-buttons">
+            <button id="modalConfirm" class="btn btn-primary">Да</button>
+            <button id="modalCancel" class="btn btn-outline">Отмена</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/test.js?v=2"></script>
+  </body>
 </html>

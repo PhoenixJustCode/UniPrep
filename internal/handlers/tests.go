@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"uniprep/internal/database"
@@ -81,30 +83,41 @@ func GetTestTypes(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTestQuestions(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("[DEBUG] GetTestQuestions called")
+
 	session, _ := sessionStore.Get(r, "session")
-	_, ok := session.Values["user_id"].(int)
+	userID, ok := session.Values["user_id"].(int)
 	if !ok {
+		fmt.Println("[DEBUG] Unauthorized - no user_id in session")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	fmt.Printf("[DEBUG] User ID: %d\n", userID)
 
 	vars := mux.Vars(r)
+	fmt.Printf("[DEBUG] URL vars: %+v\n", vars)
+
 	subjectID, err := strconv.Atoi(vars["subjectId"])
 	if err != nil {
+		fmt.Printf("[DEBUG] Invalid subject ID: %v\n", err)
 		http.Error(w, "Invalid subject ID", http.StatusBadRequest)
 		return
 	}
+	fmt.Printf("[DEBUG] Subject ID: %d\n", subjectID)
 
-	_, err = strconv.Atoi(vars["testTypeId"])
+	testTypeID, err := strconv.Atoi(vars["testTypeId"])
 	if err != nil {
+		fmt.Printf("[DEBUG] Invalid test type ID: %v\n", err)
 		http.Error(w, "Invalid test type ID", http.StatusBadRequest)
 		return
 	}
+	fmt.Printf("[DEBUG] Test Type ID: %d\n", testTypeID)
 
 	// Получаем все вопросы по предмету
-	rows, err := database.DB.Query("SELECT id, subject_id, text FROM questions WHERE subject_id = $1", subjectID)
+	rows, err := database.DB.Query("SELECT id, subject_id, text, COALESCE(explanation, '') as explanation FROM questions WHERE subject_id = $1", subjectID)
 	if err != nil {
-		http.Error(w, "Failed to fetch questions", http.StatusInternalServerError)
+		fmt.Printf("[DEBUG] DB Query error: %v\n", err)
+		http.Error(w, fmt.Sprintf("Failed to fetch questions: %v", err), http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -113,9 +126,11 @@ func GetTestQuestions(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var q models.Question
 		q.Answers = []models.Answer{} // Инициализируем пустой слайс
-		if err := rows.Scan(&q.ID, &q.SubjectID, &q.Text); err != nil {
+		if err := rows.Scan(&q.ID, &q.SubjectID, &q.Text, &q.Explanation); err != nil {
+			fmt.Printf("[DEBUG] Scan error: %v\n", err)
 			continue
 		}
+		fmt.Printf("[DEBUG] Found question ID=%d: %s\n", q.ID, q.Text)
 
 		// Получаем ответы для вопроса
 		answerRows, err := database.DB.Query(
@@ -131,27 +146,31 @@ func GetTestQuestions(w http.ResponseWriter, r *http.Request) {
 			}
 			answerRows.Close()
 		}
+		fmt.Printf("[DEBUG] Question %d has %d answers\n", q.ID, len(q.Answers))
 
-		allQuestions = append(allQuestions, q)
+		// Добавляем только вопросы, у которых есть ответы
+		if len(q.Answers) > 0 {
+			allQuestions = append(allQuestions, q)
+		}
 	}
 
-	// Для MVP: если есть хотя бы один вопрос, повторяем его 25 раз
+	fmt.Printf("[DEBUG] Total questions with answers: %d\n", len(allQuestions))
+
+	// Формируем список из 25 вопросов
 	var questions []models.Question
 	if len(allQuestions) > 0 {
-		baseQuestion := allQuestions[0]
-		// Проверяем, что у вопроса есть ответы
-		if len(baseQuestion.Answers) == 0 {
-			http.Error(w, "Question has no answers", http.StatusInternalServerError)
-			return
-		}
-
+		// Используем все доступные вопросы, повторяя их если нужно до 25
 		for i := 0; i < 25; i++ {
-			// Создаем копию вопроса с уникальными ID для каждого вопроса
+			// Берём вопрос по циклическому индексу
+			baseQuestion := allQuestions[i%len(allQuestions)]
+
+			// Создаем копию вопроса
 			q := models.Question{
-				ID:        baseQuestion.ID,
-				SubjectID: baseQuestion.SubjectID,
-				Text:      baseQuestion.Text,
-				Answers:   make([]models.Answer, 0, len(baseQuestion.Answers)), // Инициализируем слайс с правильной емкостью
+				ID:          baseQuestion.ID,
+				SubjectID:   baseQuestion.SubjectID,
+				Text:        baseQuestion.Text,
+				Explanation: baseQuestion.Explanation,
+				Answers:     make([]models.Answer, 0, len(baseQuestion.Answers)),
 			}
 			// Копируем ответы
 			for _, ans := range baseQuestion.Answers {
@@ -164,9 +183,13 @@ func GetTestQuestions(w http.ResponseWriter, r *http.Request) {
 			}
 			questions = append(questions, q)
 		}
+		fmt.Printf("[DEBUG] Returning %d questions\n", len(questions))
 	} else {
-		// Если вопросов нет, возвращаем пустой массив
-		questions = []models.Question{}
+		// Если вопросов нет, возвращаем пустой массив с сообщением
+		fmt.Println("[DEBUG] No questions found, returning empty array")
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]models.Question{})
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -182,32 +205,24 @@ func SubmitTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		SubjectID  int                 `json:"subject_id"`
-		TestTypeID int                 `json:"test_type_id"`
-		Answers    []models.UserAnswer `json:"answers"`
+		SubjectID      int `json:"subject_id"`
+		TestTypeID     int `json:"test_type_id"`
+		Score          int `json:"score"`
+		TotalQuestions int `json:"total_questions"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		fmt.Printf("[DEBUG] SubmitTest decode error: %v\n", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+	fmt.Printf("[DEBUG] SubmitTest received: %+v\n", req)
 
-	// Проверяем правильность ответов
-	// Каждый ответ проверяется отдельно
-	score := 0
-	totalQuestions := len(req.Answers)
+	// Since we are using hardcoded questions in the frontend,
+	// we trust the score sent by the frontend for now.
+	score := req.Score
+	totalQuestions := req.TotalQuestions
 
-	for _, userAns := range req.Answers {
-		var isCorrect bool
-		err := database.DB.QueryRow(
-			"SELECT is_correct FROM answers WHERE id = $1 AND question_id = $2",
-			userAns.AnswerID, userAns.QuestionID,
-		).Scan(&isCorrect)
-
-		if err == nil && isCorrect {
-			score++
-		}
-	}
+	// Validation skipped because questions are in JS
 
 	// Сохраняем результат теста
 	var sessionID int
@@ -289,6 +304,7 @@ func DeleteTestHistory(w http.ResponseWriter, r *http.Request) {
 	session, _ := sessionStore.Get(r, "session")
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
+		log.Printf("DELETE: User not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
 		return
@@ -297,10 +313,13 @@ func DeleteTestHistory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID, err := strconv.Atoi(vars["sessionId"])
 	if err != nil {
+		log.Printf("DELETE: Invalid session ID: %v", vars["sessionId"])
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid session ID"})
 		return
 	}
+
+	log.Printf("DELETE: User %d attempting to delete session %d", userID, sessionID)
 
 	// Проверяем, что сессия принадлежит текущему пользователю
 	var ownerID int
@@ -310,12 +329,14 @@ func DeleteTestHistory(w http.ResponseWriter, r *http.Request) {
 	).Scan(&ownerID)
 
 	if err != nil {
+		log.Printf("DELETE: Session %d not found in DB: %v", sessionID, err)
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Session not found"})
 		return
 	}
 
 	if ownerID != userID {
+		log.Printf("DELETE: User %d is not the owner of session %d (owner is %d)", userID, sessionID, ownerID)
 		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Forbidden"})
 		return
@@ -324,11 +345,13 @@ func DeleteTestHistory(w http.ResponseWriter, r *http.Request) {
 	// Удаляем сессию
 	_, err = database.DB.Exec("DELETE FROM test_sessions WHERE id = $1", sessionID)
 	if err != nil {
+		log.Printf("DELETE: Failed to delete session %d: %v", sessionID, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to delete session"})
 		return
 	}
 
+	log.Printf("DELETE: Session %d successfully deleted", sessionID)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }

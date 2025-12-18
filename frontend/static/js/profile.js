@@ -1,218 +1,285 @@
-async function loadProfile() {
-    try {
-        const response = await fetch('/api/profile');
-        if (response.ok) {
-            const user = await response.json();
-            
-            // Заполняем поля просмотра
-            document.getElementById('viewEmail').textContent = user.email || 'Не указан';
-            document.getElementById('viewName').textContent = user.name || 'Не указано';
-            document.getElementById('viewPhone').textContent = user.phone || 'Не указан';
-            
-            // Заполняем поля редактирования
-            document.getElementById('email').value = user.email || '';
-            document.getElementById('name').value = user.name || '';
-            document.getElementById('phone').value = user.phone || '';
-        }
-    } catch (error) {
-        console.error('Error loading profile:', error);
+// Profile.js - Hardened version with custom modal and extensive logging
+console.log("DEBUG: profile.js script started executing");
+
+window.showHidden = window.showHidden || false;
+
+function showCustomConfirm(message) {
+  console.log("DEBUG: showCustomConfirm requested with message:", message);
+  return new Promise((resolve) => {
+    const modal = document.getElementById("customModal");
+    const modalMessage = document.getElementById("modalMessage");
+    const confirmBtn = document.getElementById("modalConfirm");
+    const cancelBtn = document.getElementById("modalCancel");
+
+    if (!modal || !modalMessage || !confirmBtn || !cancelBtn) {
+      console.error("DEBUG: Modal elements NOT FOUND in DOM!");
+      // Fallback if modal elements are missing
+      resolve(confirm(message));
+      return;
     }
 
-    loadTestHistory();
+    modalMessage.textContent = message;
+    modal.style.display = "flex";
+    console.log("DEBUG: Custom modal displayed");
+
+    const onConfirm = () => {
+      console.log("DEBUG: Custom modal - user clicked CONFIRM");
+      modal.style.display = "none";
+      cleanup();
+      resolve(true);
+    };
+
+    const onCancel = () => {
+      console.log("DEBUG: Custom modal - user clicked CANCEL");
+      modal.style.display = "none";
+      cleanup();
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+    };
+
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+  });
 }
 
-function enableEdit() {
-    document.getElementById('profileView').style.display = 'none';
-    document.getElementById('profileEdit').style.display = 'block';
-}
+window.loadProfile = async function () {
+  console.log("DEBUG: loadProfile started");
+  try {
+    const response = await fetch("/api/profile");
+    console.log("DEBUG: Profile fetch response status:", response.status);
+    if (response.ok) {
+      const user = await response.json();
+      console.log("DEBUG: Profile data received for user:", user.email);
+      document.getElementById("viewEmail").textContent = user.email || "---";
+      document.getElementById("viewName").textContent = user.name || "---";
+      document.getElementById("viewPhone").textContent = user.phone || "---";
 
-function cancelEdit() {
-    loadProfile(); // Перезагружаем данные
-    document.getElementById('profileView').style.display = 'block';
-    document.getElementById('profileEdit').style.display = 'none';
-    document.getElementById('message').style.display = 'none';
-}
-
-async function loadTestHistory() {
-    try {
-        const response = await fetch('/api/tests/history');
-        if (response.ok) {
-            const history = await response.json();
-            const historyList = document.getElementById('historyList');
-            
-            if (history.length === 0) {
-                historyList.innerHTML = '<p>История тестов пуста</p>';
-                return;
-            }
-
-            historyList.innerHTML = '';
-            
-            // Проверяем localStorage для скрытых элементов
-            const hiddenItems = JSON.parse(localStorage.getItem('hiddenHistoryItems') || '[]');
-            
-            history.forEach(item => {
-                const historyItem = document.createElement('div');
-                const isHidden = hiddenItems.includes(item.id);
-                historyItem.className = isHidden ? 'history-item hidden' : 'history-item';
-                historyItem.dataset.sessionId = item.id;
-                
-                const buttonClass = isHidden ? 'history-item-btn show-btn' : 'history-item-btn hide-btn';
-                const buttonIcon = isHidden ? '👁️‍🗨️' : '👁️';
-                const buttonTitle = isHidden ? 'Показать' : 'Скрыть';
-                
-                historyItem.innerHTML = `
-                    <div class="history-item-content">
-                        <div class="history-item-info">
-                            <h4>${item.subject_name} - ${item.test_type_name}</h4>
-                            <p>${new Date(item.completed_at).toLocaleString('ru-RU')}</p>
-                        </div>
-                        <div class="history-item-score">
-                            ${item.score}/${item.total_questions} (${item.percentage.toFixed(1)}%)
-                        </div>
-                    </div>
-                    <div class="history-item-actions">
-                        <button class="${buttonClass}" onclick="toggleHistoryItem(${item.id}, this)" title="${buttonTitle}">
-                            ${buttonIcon}
-                        </button>
-                        <button class="history-item-btn delete-btn" onclick="deleteHistoryItem(${item.id})" title="Удалить">
-                            🗑️
-                        </button>
-                    </div>
-                `;
-                historyList.appendChild(historyItem);
-            });
-        }
-    } catch (error) {
-        console.error('Error loading test history:', error);
-    }
-}
-
-function toggleHistoryItem(sessionId, button) {
-    const historyItem = document.querySelector(`.history-item[data-session-id="${sessionId}"]`);
-    if (!historyItem) return;
-
-    const isHidden = historyItem.classList.contains('hidden');
-    
-    // Получаем список скрытых элементов из localStorage
-    let hiddenItems = JSON.parse(localStorage.getItem('hiddenHistoryItems') || '[]');
-    
-    if (isHidden) {
-        // Показать
-        historyItem.classList.remove('hidden');
-        button.innerHTML = '👁️';
-        button.title = 'Скрыть';
-        button.classList.remove('show-btn');
-        button.classList.add('hide-btn');
-        // Удаляем из списка скрытых
-        hiddenItems = hiddenItems.filter(id => id !== sessionId);
+      document.getElementById("email").value = user.email || "";
+      document.getElementById("name").value = user.name || "";
+      document.getElementById("phone").value = user.phone || "";
     } else {
-        // Скрыть
-        historyItem.classList.add('hidden');
-        button.innerHTML = '👁️‍🗨️';
-        button.title = 'Показать';
-        button.classList.remove('hide-btn');
-        button.classList.add('show-btn');
-        // Добавляем в список скрытых
-        if (!hiddenItems.includes(sessionId)) {
-            hiddenItems.push(sessionId);
-        }
+      console.error("DEBUG: Failed to load profile. Status:", response.status);
     }
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('hiddenHistoryItems', JSON.stringify(hiddenItems));
-}
+  } catch (error) {
+    console.error("DEBUG: Exception in loadProfile:", error);
+  }
+  window.loadTestHistory();
+};
 
-async function deleteHistoryItem(sessionId) {
-    if (!confirm('Вы уверены, что хотите удалить эту запись?')) {
+window.enableEdit = function () {
+  console.log("DEBUG: enableEdit called");
+  document.getElementById("profileView").style.display = "none";
+  document.getElementById("profileEdit").style.display = "block";
+};
+
+window.cancelEdit = function () {
+  console.log("DEBUG: cancelEdit called");
+  window.loadProfile();
+  document.getElementById("profileView").style.display = "block";
+  document.getElementById("profileEdit").style.display = "none";
+  document.getElementById("message").style.display = "none";
+};
+
+window.loadTestHistory = async function () {
+  console.log(
+    "DEBUG: loadTestHistory started, showHidden =",
+    window.showHidden
+  );
+  try {
+    const response = await fetch("/api/tests/history");
+    console.log("DEBUG: History fetch response status:", response.status);
+    if (response.ok) {
+      const history = await response.json();
+      console.log(
+        "DEBUG: History items received:",
+        history ? history.length : 0
+      );
+      const historyList = document.getElementById("historyList");
+
+      if (!history || history.length === 0) {
+        historyList.innerHTML = "<p>История пуста</p>";
         return;
-    }
+      }
 
-    try {
-        const response = await fetch(`/api/tests/history/${sessionId}`, {
-            method: 'DELETE',
-        });
+      historyList.innerHTML = "";
 
-        const result = await response.json().catch(() => ({}));
+      const hiddenItemsString =
+        localStorage.getItem("hiddenHistoryItems") || "[]";
+      const hiddenItems = JSON.parse(hiddenItemsString).map((id) =>
+        parseInt(id)
+      );
+      console.log("DEBUG: hiddenHistoryItems from localStorage:", hiddenItems);
 
-        if (response.ok) {
-            const historyItem = document.querySelector(`.history-item[data-session-id="${sessionId}"]`);
-            if (historyItem) {
-                historyItem.remove();
-                
-                // Удаляем из localStorage, если была скрыта
-                let hiddenItems = JSON.parse(localStorage.getItem('hiddenHistoryItems') || '[]');
-                hiddenItems = hiddenItems.filter(id => id !== sessionId);
-                localStorage.setItem('hiddenHistoryItems', JSON.stringify(hiddenItems));
-                
-                // Проверяем, остались ли еще записи
-                const historyList = document.getElementById('historyList');
-                const visibleItems = historyList.querySelectorAll('.history-item:not(.hidden)');
-                if (visibleItems.length === 0 && historyList.children.length === 0) {
-                    historyList.innerHTML = '<p>История тестов пуста</p>';
-                }
-            }
-        } else {
-            const errorMsg = result.error || `Ошибка при удалении записи (${response.status})`;
-            console.error('Delete error:', response.status, result);
-            alert(errorMsg);
+      let visibleCount = 0;
+      history.forEach((item) => {
+        const itemId = parseInt(item.id);
+        const isHidden = hiddenItems.includes(itemId);
+
+        if (isHidden && !window.showHidden) {
+          return;
         }
-    } catch (error) {
-        console.error('Error deleting history item:', error);
-        alert('Ошибка соединения с сервером: ' + error.message);
-    }
-}
 
-document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const messageDiv = document.getElementById('message');
+        visibleCount++;
 
-    const name = document.getElementById('name').value;
-    const phone = document.getElementById('phone').value;
+        const historyItem = document.createElement("div");
+        historyItem.className = isHidden
+          ? "history-item hidden-item"
+          : "history-item";
 
-    try {
-        const response = await fetch('/api/profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, phone }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            messageDiv.textContent = 'Профиль успешно обновлен';
-            messageDiv.className = 'message success';
-            messageDiv.style.display = 'block';
-            
-            // Перезагружаем профиль и переключаемся в режим просмотра
-            setTimeout(() => {
-                loadProfile();
-                document.getElementById('profileView').style.display = 'block';
-                document.getElementById('profileEdit').style.display = 'none';
-                messageDiv.style.display = 'none';
-            }, 1500);
-        } else {
-            messageDiv.textContent = 'Ошибка при обновлении профиля';
-            messageDiv.className = 'message error';
-            messageDiv.style.display = 'block';
+        if (isHidden) {
+          historyItem.style.opacity = "0.5";
+          historyItem.style.border = "1px dashed #ccc";
         }
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        messageDiv.textContent = 'Ошибка соединения с сервером';
-        messageDiv.className = 'message error';
-        messageDiv.style.display = 'block';
-    }
-});
 
-async function logout() {
-    try {
-        await fetch('/api/logout', { method: 'POST' });
-        location.href = '/';
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-}
+        const btnText = isHidden ? "👁️‍🗨️" : "👁️";
+        const btnTitle = isHidden ? "Показать" : "Скрыть";
+        const statusSuffix = isHidden ? " (Скрыто)" : "";
 
-// Загружаем профиль при загрузке страницы
-loadProfile();
+        historyItem.innerHTML =
+          ' \
+                    <div class="history-item-content"> \
+                        <div class="history-item-info"> \
+                            <h4>' +
+          item.subject_name +
+          " - " +
+          item.test_type_name +
+          statusSuffix +
+          "</h4> \
+                            <p>" +
+          new Date(item.completed_at).toLocaleString("ru-RU") +
+          '</p> \
+                        </div> \
+                        <div class="history-item-score"> \
+                            ' +
+          item.score +
+          "/" +
+          item.total_questions +
+          " (" +
+          item.percentage.toFixed(1) +
+          '%) \
+                        </div> \
+                    </div> \
+                    <div class="history-item-actions"> \
+                        <button class="history-item-btn" onclick="window.toggleHistoryItem(' +
+          itemId +
+          ')" title="' +
+          btnTitle +
+          '">' +
+          btnText +
+          '</button> \
+                        <button class="history-item-btn delete-btn" onclick="window.deleteHistoryItem(' +
+          itemId +
+          ')" title="Удалить">🗑️</button> \
+                    </div> \
+                ';
+        historyList.appendChild(historyItem);
+      });
+      console.log("DEBUG: Rendered", visibleCount, "history items");
+    } else {
+      console.error("DEBUG: Failed to load history. Status:", response.status);
+    }
+  } catch (error) {
+    console.error("DEBUG: Exception in loadTestHistory:", error);
+  }
+};
+
+window.toggleShowHidden = function () {
+  console.log("DEBUG: toggleShowHidden called. Old state:", window.showHidden);
+  window.showHidden = !window.showHidden;
+  const btn = document.getElementById("showHiddenBtn");
+  if (btn) {
+    btn.textContent = window.showHidden
+      ? 'Скрыть "скрытые"'
+      : "Показать скрытые";
+  }
+  window.loadTestHistory();
+};
+
+window.toggleHistoryItem = function (sessionId) {
+  sessionId = parseInt(sessionId);
+  console.log("DEBUG: toggleHistoryItem for sessionId:", sessionId);
+  let items = JSON.parse(
+    localStorage.getItem("hiddenHistoryItems") || "[]"
+  ).map((id) => parseInt(id));
+  const idx = items.indexOf(sessionId);
+  if (idx !== -1) {
+    console.log("DEBUG: Removing from hiddenItems list");
+    items.splice(idx, 1);
+  } else {
+    console.log("DEBUG: Adding to hiddenItems list");
+    items.push(sessionId);
+  }
+  localStorage.setItem("hiddenHistoryItems", JSON.stringify(items));
+  window.loadTestHistory();
+};
+
+window.deleteHistoryItem = async function (sessionId) {
+  sessionId = parseInt(sessionId);
+  console.log("DEBUG: deleteHistoryItem STARTED for sessionId:", sessionId);
+
+  const confirmed = await showCustomConfirm(
+    "Удалить эту запись навсегда из базы данных?"
+  );
+  if (!confirmed) {
+    console.log("DEBUG: deleteHistoryItem ABORTED by user");
+    return;
+  }
+  console.log(
+    "DEBUG: deleteHistoryItem CONFIRMED by user, sending DELETE request..."
+  );
+
+  try {
+    const response = await fetch("/api/tests/history/" + sessionId, {
+      method: "DELETE",
+    });
+    console.log("DEBUG: Server DELETE response status:", response.status);
+
+    if (response.ok) {
+      console.log("DEBUG: Deletion SUCCESS on server");
+      // Also clean up localStorage if it was hidden
+      let items = JSON.parse(
+        localStorage.getItem("hiddenHistoryItems") || "[]"
+      ).map((id) => parseInt(id));
+      const oldLen = items.length;
+      items = items.filter((id) => id !== sessionId);
+      if (items.length < oldLen) {
+        console.log(
+          "DEBUG: Cleaned up sessionId from hiddenItems in localStorage"
+        );
+        localStorage.setItem("hiddenHistoryItems", JSON.stringify(items));
+      }
+      console.log("DEBUG: Reloading history UI...");
+      window.loadTestHistory();
+    } else {
+      console.error(
+        "DEBUG: Server reported error during deletion. Status:",
+        response.status
+      );
+      const errData = await response.json().catch(() => ({}));
+      alert("Ошибка при удалении: " + (errData.error || response.statusText));
+    }
+  } catch (error) {
+    console.error("DEBUG: EXCEPTION during deletion request:", error);
+    alert("Критическая ошибка при удалении: " + error.message);
+  }
+};
+
+window.logout = async function () {
+  console.log("DEBUG: Logout requested");
+  try {
+    await fetch("/api/logout", { method: "POST" });
+    location.href = "/";
+  } catch (e) {
+    console.error("DEBUG: Logout error", e);
+    location.href = "/"; // Force redirect anyway
+  }
+};
+
+// Initial load
+console.log("DEBUG: Initiating initial page load...");
+window.loadProfile();
+console.log("DEBUG: profile.js finished initialization");

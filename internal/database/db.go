@@ -66,7 +66,8 @@ func createTables() error {
 		`CREATE TABLE IF NOT EXISTS questions (
 			id SERIAL PRIMARY KEY,
 			subject_id INTEGER REFERENCES subjects(id),
-			text TEXT NOT NULL
+			text TEXT NOT NULL,
+			explanation TEXT DEFAULT ''
 		)`,
 
 		`CREATE TABLE IF NOT EXISTS answers (
@@ -107,6 +108,10 @@ func seedData() error {
 
 	if count > 0 {
 		log.Println("Data already seeded")
+		// Всё равно проверяем математические вопросы
+		if err := seedMathQuestions(); err != nil {
+			log.Printf("Warning: failed to seed math questions: %v", err)
+		}
 		return nil
 	}
 
@@ -362,5 +367,256 @@ func seedData() error {
 	}
 
 	log.Println("Data seeded successfully")
+
+	// Добавляем реальные математические вопросы
+	if err := seedMathQuestions(); err != nil {
+		log.Printf("Warning: failed to seed math questions: %v", err)
+	}
+
+	return nil
+}
+
+// seedMathQuestions добавляет реальные математические вопросы по Алгебре
+func seedMathQuestions() error {
+	// Находим ID предмета "Алгебра"
+	var algebraID int
+	err := DB.QueryRow("SELECT id FROM subjects WHERE name = 'Алгебра'").Scan(&algebraID)
+	if err != nil {
+		return fmt.Errorf("algebra subject not found: %w", err)
+	}
+
+	mathQuestions := []struct {
+		text        string
+		explanation string
+		answers     []struct {
+			text      string
+			isCorrect bool
+		}
+	}{
+		{
+			text:        "300 ÷ 10 = ?",
+			explanation: "Чтобы разделить число на 10, нужно убрать один ноль справа. 300 ÷ 10 = 30",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"30", true},
+				{"3", false},
+				{"300", false},
+				{"3000", false},
+			},
+		},
+		{
+			text:        "25 × 4 = ?",
+			explanation: "25 × 4 — это то же самое, что 25 × 2 × 2 = 50 × 2 = 100. Или можно запомнить: 25 × 4 всегда равно 100.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"100", true},
+				{"90", false},
+				{"125", false},
+				{"80", false},
+			},
+		},
+		{
+			text:        "144 ÷ 12 = ?",
+			explanation: "144 — это 12 × 12 (12 в квадрате). Поэтому 144 ÷ 12 = 12.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"12", true},
+				{"14", false},
+				{"11", false},
+				{"13", false},
+			},
+		},
+		{
+			text:        "15 + 27 = ?",
+			explanation: "Складываем: 15 + 27. Сначала единицы: 5 + 7 = 12 (записываем 2, переносим 1). Потом десятки: 1 + 2 + 1 = 4. Ответ: 42.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"42", true},
+				{"32", false},
+				{"52", false},
+				{"41", false},
+			},
+		},
+		{
+			text:        "81 ÷ 9 = ?",
+			explanation: "81 — это 9 × 9 (9 в квадрате). Поэтому 81 ÷ 9 = 9.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"9", true},
+				{"8", false},
+				{"7", false},
+				{"10", false},
+			},
+		},
+		{
+			text:        "50 - 18 = ?",
+			explanation: "50 - 18: сначала вычитаем 20 (получаем 30), потом прибавляем 2 (потому что вычли на 2 больше). Ответ: 32.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"32", true},
+				{"42", false},
+				{"28", false},
+				{"38", false},
+			},
+		},
+		{
+			text:        "7 × 8 = ?",
+			explanation: "7 × 8 = 56. Полезно запомнить: 5, 6, 7, 8 → 56 = 7 × 8.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"56", true},
+				{"54", false},
+				{"63", false},
+				{"48", false},
+			},
+		},
+		{
+			text:        "1000 - 347 = ?",
+			explanation: "От 1000 отнимаем 347: 1000 - 347 = 653. Проще: 999 - 347 = 652, потом +1 = 653.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"653", true},
+				{"753", false},
+				{"553", false},
+				{"663", false},
+			},
+		},
+		{
+			text:        "36 ÷ 4 = ?",
+			explanation: "36 ÷ 4: сколько раз 4 помещается в 36? 4 × 9 = 36, значит ответ 9.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"9", true},
+				{"8", false},
+				{"6", false},
+				{"12", false},
+			},
+		},
+		{
+			text:        "125 × 8 = ?",
+			explanation: "125 × 8 = 1000. Это полезно запомнить: 125 — это 1000 ÷ 8.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"1000", true},
+				{"800", false},
+				{"900", false},
+				{"1125", false},
+			},
+		},
+		{
+			text:        "64 ÷ 8 = ?",
+			explanation: "64 — это 8 × 8 (8 в квадрате). Поэтому 64 ÷ 8 = 8.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"8", true},
+				{"6", false},
+				{"7", false},
+				{"9", false},
+			},
+		},
+		{
+			text:        "45 + 38 = ?",
+			explanation: "45 + 38: складываем единицы 5 + 8 = 13 (пишем 3, переносим 1). Десятки: 4 + 3 + 1 = 8. Ответ: 83.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"83", true},
+				{"73", false},
+				{"93", false},
+				{"82", false},
+			},
+		},
+		{
+			text:        "9 × 9 = ?",
+			explanation: "9 × 9 = 81. Девять девяток — это 81.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"81", true},
+				{"72", false},
+				{"90", false},
+				{"89", false},
+			},
+		},
+		{
+			text:        "200 - 75 = ?",
+			explanation: "200 - 75: проще сначала 200 - 80 = 120, потом +5 = 125.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"125", true},
+				{"115", false},
+				{"135", false},
+				{"175", false},
+			},
+		},
+		{
+			text:        "12 × 12 = ?",
+			explanation: "12 × 12 = 144. Это полезно запомнить: 12 в квадрате равно 144.",
+			answers: []struct {
+				text      string
+				isCorrect bool
+			}{
+				{"144", true},
+				{"124", false},
+				{"132", false},
+				{"156", false},
+			},
+		},
+	}
+
+	// Вставляем вопросы
+	for _, q := range mathQuestions {
+		// Проверяем, существует ли уже такой вопрос
+		var existingID int
+		checkErr := DB.QueryRow("SELECT id FROM questions WHERE subject_id = $1 AND text = $2", algebraID, q.text).Scan(&existingID)
+		if checkErr == nil {
+			continue // Вопрос уже существует
+		}
+
+		var questionID int
+		err = DB.QueryRow(
+			"INSERT INTO questions (subject_id, text, explanation) VALUES ($1, $2, $3) RETURNING id",
+			algebraID, q.text, q.explanation,
+		).Scan(&questionID)
+		if err != nil {
+			continue
+		}
+
+		for _, ans := range q.answers {
+			_, err = DB.Exec("INSERT INTO answers (question_id, text, is_correct) VALUES ($1, $2, $3)",
+				questionID, ans.text, ans.isCorrect)
+			if err != nil {
+				continue
+			}
+		}
+	}
+
+	log.Println("Math questions seeded successfully")
 	return nil
 }

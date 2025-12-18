@@ -1,72 +1,113 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Профиль - UniPrep</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <h1>👤 Профиль</h1>
-            <nav>
-                <button onclick="location.href='/'" class="btn btn-outline">Главная</button>
-                <button onclick="location.href='/tests'" class="btn btn-outline">Тесты</button>
-                <button onclick="logout()" class="btn btn-outline">Выйти</button>
-            </nav>
-        </header>
+      <header>
+        <h1>👤 Профиль</h1>
+        <nav>
+          <button onclick="location.href='/'" class="btn btn-outline">
+            Главная
+          </button>
+          <button onclick="location.href='/tests'" class="btn btn-outline">
+            Тесты
+          </button>
+          <button onclick="logout()" class="btn btn-outline">Выйти</button>
+        </nav>
+      </header>
 
-        <div class="profile-section">
-            <div class="profile-info">
-                <h2>Информация о профиле</h2>
-                
-                <div id="profileView">
-                    <div class="profile-details">
-                        <div class="profile-item">
-                            <span class="profile-label">Email:</span>
-                            <span class="profile-value" id="viewEmail"></span>
-                        </div>
-                        <div class="profile-item">
-                            <span class="profile-label">Имя:</span>
-                            <span class="profile-value" id="viewName"></span>
-                        </div>
-                        <div class="profile-item">
-                            <span class="profile-label">Телефон:</span>
-                            <span class="profile-value" id="viewPhone"></span>
-                        </div>
-                    </div>
-                    <button onclick="enableEdit()" class="btn btn-primary">Редактировать</button>
-                </div>
+      <div class="profile-section">
+        <div class="profile-info">
+          <h2>Информация о профиле</h2>
 
-                <div id="profileEdit" style="display: none;">
-                    <form id="profileForm">
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="email" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Имя</label>
-                            <input type="text" id="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Телефон</label>
-                            <input type="tel" id="phone">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                        <button type="button" onclick="cancelEdit()" class="btn btn-outline">Отмена</button>
-                    </form>
-                </div>
-                <div id="message" class="message"></div>
+          <div id="profileView">
+            <div class="profile-details">
+              <div class="profile-item">
+                <span class="profile-label">Email:</span>
+                <span class="profile-value" id="viewEmail"></span>
+              </div>
+              <div class="profile-item">
+                <span class="profile-label">Имя:</span>
+                <span class="profile-value" id="viewName"></span>
+              </div>
+              <div class="profile-item">
+                <span class="profile-label">Телефон:</span>
+                <span class="profile-value" id="viewPhone"></span>
+              </div>
             </div>
+            <button onclick="enableEdit()" class="btn btn-primary">
+              Редактировать
+            </button>
+          </div>
 
-            <div class="test-history">
-                <h2>История тестов</h2>
-                <div id="historyList"></div>
-            </div>
+          <div id="profileEdit" style="display: none">
+            <form id="profileForm">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" readonly />
+              </div>
+              <div class="form-group">
+                <label>Имя</label>
+                <input type="text" id="name" required />
+              </div>
+              <div class="form-group">
+                <label>Телефон</label>
+                <input type="tel" id="phone" />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Сохранить изменения
+              </button>
+              <button
+                type="button"
+                onclick="cancelEdit()"
+                class="btn btn-outline"
+              >
+                Отмена
+              </button>
+            </form>
+          </div>
+          <div id="message" class="message"></div>
         </div>
+
+        <div class="test-history">
+          <div
+            class="history-header"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <h2>История тестов</h2>
+            <button
+              onclick="window.toggleShowHidden()"
+              id="showHiddenBtn"
+              class="btn btn-outline"
+              style="padding: 5px 10px; font-size: 14px"
+            >
+              Показать скрытые
+            </button>
+          </div>
+          <div id="historyList"></div>
+        </div>
+      </div>
+      <div id="customModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <p id="modalMessage"></p>
+          <div class="modal-buttons">
+            <button id="modalConfirm" class="btn btn-primary">Да</button>
+            <button id="modalCancel" class="btn btn-outline">Отмена</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script src="/static/js/profile.js"></script>
-</body>
+    <script src="/static/js/profile.js?v=2"></script>
+  </body>
 </html>
