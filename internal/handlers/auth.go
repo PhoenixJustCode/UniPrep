@@ -62,12 +62,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := database.DB.QueryRow(
-		"SELECT id, email, password, name, phone FROM users WHERE email = $1",
+		"SELECT id, email, password, COALESCE(name, ''), COALESCE(phone, '') FROM users WHERE email = $1",
 		req.Email,
 	).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Phone)
 
 	if err != nil {
-		log.Printf("DEBUG: Login failed: User not found for email %s: %v", req.Email, err)
+		log.Printf("DEBUG: Login failed: Error finding user or scanning row for email %s: %v", req.Email, err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid credentials"})
@@ -118,7 +118,7 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := database.DB.QueryRow(
-		"SELECT id, email, name, phone, created_at FROM users WHERE id = $1",
+		"SELECT id, email, COALESCE(name, ''), COALESCE(phone, ''), created_at FROM users WHERE id = $1",
 		userID,
 	).Scan(&user.ID, &user.Email, &user.Name, &user.Phone, &user.CreatedAt)
 
