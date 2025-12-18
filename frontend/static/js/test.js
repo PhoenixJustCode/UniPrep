@@ -3797,13 +3797,24 @@ async function loadQuestions() {
     // Получаем вопросы для текущего предмета
     const subjectQuestions = allQuestions[subjectId] || mathQuestions;
 
+    if (!subjectQuestions || subjectQuestions.length === 0) {
+      console.error("DEBUG: Questions not found for subject", subjectId);
+      alert("Вопросы для этого предмета еще не добавлены.");
+      return;
+    }
+
     // Берём до 25 вопросов (повторяем если мало)
     questions = [];
     for (let i = 0; i < 25; i++) {
       questions.push(subjectQuestions[i % subjectQuestions.length]);
     }
 
-    console.log("Loaded questions for subject", subjectId, ":", questions);
+    console.log(
+      "DEBUG: Loaded questions for subject",
+      subjectId,
+      ":",
+      questions.length
+    );
 
     if (!questions || questions.length === 0) {
       alert("Вопросы не найдены");
@@ -3989,34 +4000,48 @@ function updateIndicators() {
 }
 
 function showCustomConfirm(message) {
+  console.log("DEBUG: showCustomConfirm called with:", message);
   return new Promise((resolve) => {
     const modal = document.getElementById("customModal");
     const modalMessage = document.getElementById("modalMessage");
     const confirmBtn = document.getElementById("modalConfirm");
     const cancelBtn = document.getElementById("modalCancel");
 
-    modalMessage.textContent = message;
-    modal.style.display = "flex";
+    if (!modal || !modalMessage || !confirmBtn || !cancelBtn) {
+      console.warn(
+        "DEBUG: Modal elements not found, falling back to confirm()"
+      );
+      resolve(confirm(message));
+      return;
+    }
 
-    const onConfirm = () => {
-      modal.style.display = "none";
-      cleanup();
-      resolve(true);
-    };
+    try {
+      modalMessage.textContent = message;
+      modal.style.display = "flex";
 
-    const onCancel = () => {
-      modal.style.display = "none";
-      cleanup();
-      resolve(false);
-    };
+      const onConfirm = () => {
+        modal.style.display = "none";
+        cleanup();
+        resolve(true);
+      };
 
-    const cleanup = () => {
-      confirmBtn.removeEventListener("click", onConfirm);
-      cancelBtn.removeEventListener("click", onCancel);
-    };
+      const onCancel = () => {
+        modal.style.display = "none";
+        cleanup();
+        resolve(false);
+      };
 
-    confirmBtn.addEventListener("click", onConfirm);
-    cancelBtn.addEventListener("click", onCancel);
+      const cleanup = () => {
+        confirmBtn.removeEventListener("click", onConfirm);
+        cancelBtn.removeEventListener("click", onCancel);
+      };
+
+      confirmBtn.addEventListener("click", onConfirm, { once: true });
+      cancelBtn.addEventListener("click", onCancel, { once: true });
+    } catch (e) {
+      console.error("DEBUG: Error in custom modal, fallback to confirm()", e);
+      resolve(confirm(message));
+    }
   });
 }
 

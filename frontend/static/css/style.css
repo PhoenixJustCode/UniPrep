@@ -724,6 +724,131 @@ nav button {
     transform: translateY(0);
   }
 }
+/* Homepage Styles - Restoration */
+.homepage-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 30px;
+  border-radius: 15px;
+  color: white;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.mortarboard-icon {
+  font-size: 50px;
+}
+
+.brand-text h1 {
+  font-size: 42px;
+  margin: 0;
+  color: #fff;
+}
+
+.brand-text p {
+  font-size: 18px;
+  opacity: 0.9;
+  margin: 5px 0 0 0;
+}
+
+.homepage-content {
+  background: white;
+  border-radius: 15px;
+  padding: 60px 40px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.welcome-section h2 {
+  font-size: 36px;
+  color: #667eea;
+  margin-bottom: 20px;
+}
+
+.welcome-section .subtitle {
+  font-size: 18px;
+  color: #666;
+  max-width: 800px;
+  margin: 0 auto 50px auto;
+  line-height: 1.6;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+.feature-item {
+  background: #f8faff;
+  padding: 30px 20px;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+
+.feature-item h3 {
+  font-size: 20px;
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.feature-item p {
+  font-size: 14px;
+  color: #777;
+}
+
+.homepage-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.btn-login {
+  background-color: #6a82fb;
+  color: white;
+  padding: 15px 40px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(106, 130, 251, 0.3);
+}
+
+.btn-register {
+  background-color: #8358c2;
+  color: white;
+  padding: 15px 40px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(131, 88, 194, 0.3);
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-text h1 {
+    font-size: 32px;
+  }
+}
 /* Modal Styles */
 .modal {
   position: fixed;

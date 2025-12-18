@@ -8,82 +8,70 @@
   </head>
   <body>
     <div class="container">
-      <header class="main-header">
-        <div class="header-content">
-          <div class="logo-section">
-            <h1>🎓 UniPrep</h1>
-            <p class="tagline">Подготовка к рубежкам и экзаменам</p>
+      <header class="homepage-header">
+        <div class="brand">
+          <span class="mortarboard-icon">🎓</span>
+          <div class="brand-text">
+            <h1>UniPrep</h1>
+            <p>Подготовка к рубежкам и экзаменам</p>
           </div>
         </div>
       </header>
 
-      <div class="hero-section" id="authSection">
-        <div class="hero-content">
+      <main class="homepage-content">
+        <div class="welcome-section" id="authSection">
           <h2>Добро пожаловать в UniPrep!</h2>
-          <p class="hero-description">
+          <p class="subtitle">
             Современная платформа для подготовки к экзаменам и рубежным
             контрольным работам. Проходите тесты, отслеживайте прогресс и
             улучшайте свои знания.
           </p>
 
-          <div class="features">
-            <div class="feature-card">
+          <div class="features-grid">
+            <div class="feature-item">
               <div class="feature-icon">📚</div>
               <h3>Разнообразные тесты</h3>
               <p>Тесты по всем курсам и предметам</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">📊</div>
               <h3>Отслеживание прогресса</h3>
               <p>История всех пройденных тестов</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">⚡</div>
               <h3>Быстрая подготовка</h3>
               <p>Удобный интерфейс для эффективного обучения</p>
             </div>
           </div>
 
-          <div class="auth-buttons">
-            <button
-              onclick="location.href='/login'"
-              class="btn btn-primary btn-large"
-            >
+          <div class="homepage-actions">
+            <button onclick="location.href='/login'" class="btn btn-login">
               Войти
             </button>
             <button
               onclick="location.href='/register'"
-              class="btn btn-secondary btn-large"
+              class="btn btn-register"
             >
               Регистрация
             </button>
           </div>
         </div>
-      </div>
 
-      <div class="user-section" id="userSection" style="display: none">
-        <div class="welcome-card">
+        <div class="welcome-section" id="userSection" style="display: none">
           <h2>Добро пожаловать, <span id="userEmail"></span>!</h2>
-          <p>Выберите действие, чтобы начать</p>
-          <div class="action-buttons">
-            <button
-              onclick="location.href='/tests'"
-              class="btn btn-primary btn-large"
-            >
+          <p class="subtitle">Выберите действие, чтобы начать подготовку</p>
+          <div class="homepage-actions">
+            <button onclick="location.href='/tests'" class="btn btn-login">
               Тесты
             </button>
-            <button
-              onclick="location.href='/profile'"
-              class="btn btn-secondary btn-large"
-            >
+            <button onclick="location.href='/profile'" class="btn btn-register">
               Профиль
             </button>
-            <button onclick="logout()" class="btn btn-outline btn-large">
-              Выйти
-            </button>
+            <button onclick="logout()" class="btn btn-outline">Выйти</button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
 
     <script src="/static/js/main.js"></script>
